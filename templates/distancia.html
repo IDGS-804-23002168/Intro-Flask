@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+
+{% import "_macros.html" as macros %}
+
+<form method="post" action="">
+
+    {{macros.datos('x1','Escribe el valor de X1','number')}}
+    {{macros.datos('x2','Escribe el valor de X2','number')}}
+    {{macros.datos('y1','Escribe el valor de Y1','number')}}
+    {{macros.datos('y2','Escribe el valor de Y2','number')}}
+<button type="submit">Calcular</button>
+    </form>
+
+    {% if distancia is not none %}
+        <h3>La distancia es: {{ distancia }}</h3>
+    {% endif %}
+
+{% endblock %}
