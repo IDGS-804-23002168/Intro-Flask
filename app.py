@@ -1,10 +1,60 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, flash
 import math
 import forms
+from formsCinepolis import CinepolisForm
+from formsCinepolis import CinepolisForm
+from flask_wtf.csrf import CSRFProtect
 from flask_wtf.csrf import CSRFProtect
 app = Flask(__name__)
 app.secret_key = 'clave_secreta'
+app.config['SECRET_KEY'] = 'clave_secreta_123'
+csrf = CSRFProtect(app)
 csrf=CSRFProtect()
+
+
+
+@app.route("/cinepolis", methods=['GET', 'POST'])
+def cinepolis():
+    form = CinepolisForm(request.form)
+    total_pagar = 0.0
+    mensaje = ""
+
+    if request.method == 'POST' and form.validate():
+        try:
+            nombre = form.nombre.data
+            compradores = int(form.cant_compradores.data)
+            boletas = int(form.cant_boletas.data)
+            tarjeta = form.tarjeta.data
+            
+            max_boletas_permitidas = compradores * 7
+
+            if boletas > max_boletas_permitidas:
+                mensaje = f"Error: No se pueden comprar más de 7 boletas por persona."
+            else:
+                precio_unitario = 12
+                total = boletas * precio_unitario
+
+                if boletas > 5:
+                    total = total * 0.85 
+                elif boletas >= 3:
+                    total = total * 0.90 
+
+                if tarjeta == 'Si':
+                    total = total * 0.90 
+                
+                total_pagar = total
+
+        except Exception as e:
+            mensaje = "Ocurrió un error en el cálculo"
+
+    return render_template("cinepolis.html", form=form, total=total_pagar, mensaje=mensaje)
+
+
+
+
+
+
+
 
 
 @app.route('/')
@@ -116,6 +166,64 @@ def alumnos():
     nom=nom,
     ape=ape,
     email=email)
+    
+    
+    
+
+
+
+
+from formsPizzeria import PizzaForm  
+
+@app.route('/pizzeria', methods=['GET', 'POST'])
+def pizzeria():
+
+    form = PizzaForm()
+    pedido = None
+
+    precios_tamano = {
+        'ch': 40,
+        'md': 80,
+        'gr': 120
+    }
+
+    precios_ing = {
+        'jam': 10,
+        'pin': 10,
+        'cha': 10
+    }
+
+    if request.method == 'POST':
+
+        if form.validate():
+
+            precio_tamano = precios_tamano[form.tamano.data]
+            total_ingredientes = sum(precios_ing[i] for i in form.ingredientes.data)
+            num_pizzas = form.cantidad.data
+
+            total_pagar = (precio_tamano + total_ingredientes) * num_pizzas
+
+            pedido = {
+                'nombre': form.nombre.data,
+                'direccion': form.direccion.data,
+                'telefono': form.telefono.data,
+                'tamano': dict(form.tamano.choices)[form.tamano.data],
+                'ingredientes': ", ".join(
+                    dict(form.ingredientes.choices)[i]
+                    for i in form.ingredientes.data
+                ),
+                'cantidad': num_pizzas,
+                'total': total_pagar
+            }
+
+        else:
+
+             flash("Comprueba que todos los campos esten bien", "error")
+
+    return render_template('pizzeria.html', form=form, pedido=pedido)
+
+    
+    
 
 if __name__ == '__main__':
         app.run(host="127.0.0.1", port=5051,debug=True)
